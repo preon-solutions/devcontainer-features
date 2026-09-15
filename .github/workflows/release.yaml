@@ -1,0 +1,65 @@
+name: Release feature
+
+on:
+  workflow_dispatch:
+    inputs:
+      feature:
+        description: Feature to validate and publish
+        required: true
+        type: choice
+        options:
+          - codex
+          - cursor
+
+concurrency:
+  group: release-${{ inputs.feature }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish ${{ inputs.feature }}
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Validate selected feature
+        env:
+          FEATURE: ${{ inputs.feature }}
+        run: |
+          set -euo pipefail
+          case "$FEATURE" in codex|cursor) ;; *) exit 1 ;; esac
+          jq -e --arg feature "$FEATURE" '
+            .id == $feature and
+            (.version | test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))
+          ' "src/$FEATURE/devcontainer-feature.json"
+          test -f "src/$FEATURE/install.sh"
+          test -f "src/$FEATURE/oncreate.sh"
+          bash -n "src/$FEATURE/install.sh" "src/$FEATURE/oncreate.sh"
+
+      - name: Install Dev Container CLI
+        run: npm install -g @devcontainers/cli@0.89.0
+
+      - name: Stage and package selected feature
+        env:
+          FEATURE: ${{ inputs.feature }}
+        run: |
+          set -euo pipefail
+          collection="$RUNNER_TEMP/feature-release"
+          mkdir -p "$collection"
+          cp -a "src/$FEATURE" "$collection/$FEATURE"
+          devcontainer features package "$collection" --output-folder "$RUNNER_TEMP/feature-package"
+
+      - name: Publish selected feature
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          namespace="${GITHUB_REPOSITORY,,}"
+          devcontainer features publish "$RUNNER_TEMP/feature-release" \
+            --registry ghcr.io \
+            --namespace "$namespace"

@@ -1,0 +1,30 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
+{
+  "name": "devcontainer-features",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "image": "mcr.microsoft.com/devcontainers/base:noble",
+  "features": {},
+  "remoteUser": "vscode",
+  "containerEnv": {
+    "CODEX_HOME": "/home/vscode/.codex",
+    "CURSOR_CONFIG_DIR": "/home/vscode/.cursor",
+    "AGENT_CLI_CREDENTIAL_STORE": "file"
+  },
+  "remoteEnv": {
+    "PATH": "/home/vscode/.local/bin:${containerEnv:PATH}"
+  },
+  // Project-specific Docker volumes preserve config/auth across container rebuilds.
+  "mounts": [
+    "source=devcontainer-features-codex,target=/home/vscode/.codex,type=volume",
+    "source=devcontainer-features-cursor-config,target=/home/vscode/.cursor,type=volume",
+    // Cursor stores file-based credentials separately on Linux.
+    "source=devcontainer-features-cursor-auth,target=/home/vscode/.config/cursor,type=volume"
+  ],
+  "postCreateCommand": [
+    "bash",
+    "-c",
+    "set -euo pipefail; sudo chown -R \"$(id -u):$(id -g)\" \"$CODEX_HOME\" \"$CURSOR_CONFIG_DIR\" \"$HOME/.config/cursor\"; export CODEX_NON_INTERACTIVE=1; curl -fsSL https://chatgpt.com/codex/install.sh | sh; curl https://cursor.com/install -fsS | bash"
+  ],
+  "runArgs": ["--name", "devcontainer-features-devcontainer"]
+}

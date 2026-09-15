@@ -1,0 +1,18 @@
+{
+  "id": "codex",
+  "version": "1.0.0",
+  "name": "Codex CLI",
+  "options": {},
+  "containerEnv": {
+    "CODEX_HOME": "/var/lib/codex"
+  },
+  "mounts": [
+    {
+      "source": "devcontainer-features-codex",
+      "target": "/var/lib/codex",
+      "type": "volume"
+    }
+  ],
+  "onCreateCommand": "/usr/local/share/codex-feature/oncreate.sh",
+  "installsAfter": ["ghcr.io/devcontainers/features/common-utils"]
+}

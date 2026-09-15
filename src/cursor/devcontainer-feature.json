@@ -1,0 +1,19 @@
+{
+  "id": "cursor",
+  "version": "1.0.0",
+  "name": "Cursor CLI",
+  "options": {},
+  "containerEnv": {
+    "CURSOR_CONFIG_DIR": "/var/lib/cursor/config",
+    "AGENT_CLI_CREDENTIAL_STORE": "file"
+  },
+  "mounts": [
+    {
+      "source": "devcontainer-features-cursor",
+      "target": "/var/lib/cursor",
+      "type": "volume"
+    }
+  ],
+  "onCreateCommand": "/usr/local/share/cursor-feature/oncreate.sh",
+  "installsAfter": ["ghcr.io/devcontainers/features/common-utils"]
+}
